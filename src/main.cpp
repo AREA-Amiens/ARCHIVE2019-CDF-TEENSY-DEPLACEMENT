@@ -1,9 +1,23 @@
-#include <Arduino.h>
+#include "deplacement.h"
+
+//deplacement scotch
 
 void setup() {
-  // put your setup code here, to run once:
+  Wire.begin(my_adr);
+  Serial.begin(9600);
+  Wire.onReceive(receiveEvent);
+  Wire.onRequest(requestEvent);
+  Serial.println("coucou");
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+  delay(1000);
+
+}
+void receiveEvent(int howMany){
+  Serial.println("received");
+    Serial.println(Wire.read());
+}
+void requestEvent(){
+  Wire.write('a');
 }
