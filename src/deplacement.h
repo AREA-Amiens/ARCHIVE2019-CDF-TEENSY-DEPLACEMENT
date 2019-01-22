@@ -6,9 +6,14 @@
 
 #define my_adr 10         //mon adresse bus I2C
 
+#define reset_left  13
+#define sleep_left  15
+#define step_left   0
+#define dir_left    1
 
 
-
+#define acceleration  100
+#define speed         200
 
 
 
