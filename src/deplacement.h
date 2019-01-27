@@ -26,3 +26,4 @@
 
 void receiveEvent(int howMany);
 void requestEvent();
+void lancer_les_moteur(byte t[5],byte etat);

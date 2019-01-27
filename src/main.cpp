@@ -4,10 +4,11 @@
 AccelStepper motor_G(1, step_G, dir_G);
 AccelStepper motor_D(1, step_D, dir_D);
 
-int t[3],com=0;
-int vmd,vmg;
+byte t[5];
+byte com,etat=0x00,etatp=0;
+
 void setup() {
-  char i;
+  byte i;
   Wire.begin(my_adr);
   Serial.begin(9600);
   Wire.onReceive(receiveEvent);
@@ -33,32 +34,85 @@ void setup() {
   motor_D.setSpeed(100);
   motor_D.setAcceleration(100);
 
-  motor_G.moveTo(13263);
-  motor_D.moveTo(13263);
+//  motor_G.moveTo(13263);
+//  motor_D.moveTo(13263);
 
 
-  for(i=0;i<3;i++)t[i]=0;
+  for(i=0;i<4;i++)t[i]=0;
+  etat=1;
 }
 //motor_G.moveTo(-500);
 //motor_D.moveTo(500);
-//motor_G.run();
-//motor_D.run();
 void loop() {
-  char i;
+
+  //mise a jour capteur
+  //mise a jour etat
+
+  //mise a jour actionneur
+  switch (etat){
+    case 1://antante de com
+
+    if (com==1){
+      com=0;
+      if(t[0]|=(1<<1)){
+        etat=2;
+        Serial.println("la");
+      }else if(t[0]|=(1<<3))etat=3;
+      else if(t[0]|=(1<<5))etat=4;
+    }
+    break;
+
+    case 2://turn
+    Serial.println("2");
+      motor_D.move(t[1]*36);
+      motor_G.move(t[1]*36);
+      etat=5;
+      etatp=2;
+    break;
+
+    case 3:
+      Serial.println((t[3]+(t[2]<<8)));
+      motor_D.move((t[3]+(t[2]<<8))*-8);
+      motor_G.move((t[3]+(t[2]<<8))*8);
+      etat=5;
+      etatp=3;
+    break;
+
+    case 4:
+    Serial.println("4");
+      motor_D.move(t[4]*36);
+      motor_G.move(t[4]*36);
+      etat=5;
+      etatp=4;
+    break;
+    case 5://attante de fin adr_deplacement
+      if(motor_D.isRunning()==false & motor_G.isRunning()==false){
+        Serial.println("etat");
+        Serial.println(etat);
+        Serial.println(etatp);
+        if(etatp==2)etat=3;
+        else if(etatp==3)etat=4;
+        else if(etatp==4)etat=1;
+      }
+    break;
+  }
+
+
   motor_D.run();
   motor_G.run();
+  //mise a jour afficheur
 
 
-  for(i=0;i<3;i++)Serial.println(t[i]);
-  delay(10000);
+
+  //(t[1]*36,8421030522)
 }
 void receiveEvent(int howMany){
-  if(com>3)com=0;
-  t[com]=Wire.read();
-  com++;
-  //char res;
-  //res=Wire.read();
+  byte i;
+  for(i=0;i<howMany;i++)t[i]=Wire.read();
+  com=1;
+  Serial.println(com);
 }
+
 void requestEvent(){
   Wire.write('a');
 }
