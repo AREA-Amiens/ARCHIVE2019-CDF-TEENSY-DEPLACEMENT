@@ -20,9 +20,16 @@
 
 
 #define acceleration  100
-#define speed         200
+#define speed         100
 
-
+#define coeficien_turn 36.841030522//coéficiant determiner par rapore au diamétre de roue, sélection du pas(ici 1/4),le tout pour 1°
+#define coeficien_go   8.376754456//coéficiant determiner par rapore au diamétre de roue, sélection du pas(ici 1/4),le tout pour 1mm
 
 void receiveEvent(int howMany);
+//fonction pour quan l'ésclave resoi une trame de adr_actionneur
+//met la trame dans un tableau
+
+
 void requestEvent();
+//fonction pour quan le maitre appelle l'esclave
+//ranvoi si l'esclave et prés a recevoire une trame(déplacment fini)
