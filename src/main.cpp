@@ -92,6 +92,7 @@ void loop() {
       etat=5;//passe a l etat 5
       etatp=4;//passe l'étatpe précédante a 4
     break;
+
     case 5://attante de fin adr_deplacement
       if(motor_D.isRunning()==false && motor_G.isRunning()==false){//teste des morteur a l'arrée pour pacer au d'éplacemnt suivant
         c=reception_trame[0];//stocage de la trame 0
