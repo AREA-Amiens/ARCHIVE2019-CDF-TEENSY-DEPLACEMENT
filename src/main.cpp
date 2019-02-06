@@ -42,7 +42,7 @@ void setup() {
   etat=1;//passage a l'état 1 voir la machine d'état
 }
 void loop() {
-  byte b,c,d,e,f,g,h,j,k,l;//byte utiliser pour la mémoire de de la trame t[0]
+  //byte utiliser pour la mémoire de de la trame t[0]
   long dist;//varible coréspondant a la distance a par courir elle ne comprote pas de sance
   int sense;//sense variable relative au sance de la rotation ou de la direction du go
   //mise a jour capteur
@@ -51,19 +51,16 @@ void loop() {
   switch (etat){//permet de réaliser les différent etat de la machinne d'etat
     case 1://etat 1 (antante de com)
     if (com==1){//si nous avons communication alors on redirige vert les diférant état
-      l=reception_trame[0];//stocage de la trame 0
-      j=reception_trame[0];//stocage de la trame 0
-      k=reception_trame[0];//stocage de la trame 0
-      if((l&=1<<1)==(1<<1))etat=2;//passage a l'état2 si il et activer dans la trame
-      else if((j&=1<<3)==(1<<3))etat=3;//passage a l'état3 si l'état 2 n est pas activer et l'état 3 est activer dans la trame
+
+      if(iso_bite(reception_trame[0],1)==(1<<1))etat=2;//passage a l'état2 si il et activer dans la trame
+      else if(iso_bite(reception_trame[0],3)==(1<<3))etat=3;//passage a l'état3 si l'état 2 n est pas activer et l'état 3 est activer dans la trame
       else etat=4;//passage a l'état 4 si l'état 3 et 2 n est pas activet et l'état 4 est activer dans la trame
     }
     break;
 
     case 2://etat 2 (turn1)
-      b=reception_trame[0];//stocage de la trame 0
       dist=(long)(coeficien_turn*(float)reception_trame[1]);//calcule du nombre de pas pour les roue sans le signe de la direction
-      if ((b&=1<<0)==1<<0)sense=-1;//teste pour conaitre le sance de la rotation
+      if (iso_bite(reception_trame[0],0)==1<<0)sense=-1;//teste pour conaitre le sance de la rotation
       else sense=1;
       motor_D.move(dist*sense);//activation de la rotation jusque cette valeur de pas moteur droite
       motor_G.move(dist*sense);//activation de la rotation jusque cette valeur de pas moteur gauche
@@ -72,9 +69,8 @@ void loop() {
     break;
 
     case 3://etat 3 (go)
-      b=reception_trame[0];//stocage de la trame 0
       dist=(long)(coeficien_go*(float)(reception_trame[3]+(reception_trame[2]<<8)));//calcule du nombre de pas pour les roue sans le signe de la direction
-      if ((b&=1<<2)==1<<2)sense=-1;//teste pour conaitre le sance de la translation
+      if (iso_bite(reception_trame[0],2)==1<<2)sense=-1;//teste pour conaitre le sance de la translation
       else sense=1;
       motor_D.move(dist*sense);//activation de la rotation jusque cette valeur de pas moteur droite
       motor_G.move(dist*(-sense));//activation de la rotation jusque cette valeur de pas moteur gauche
@@ -83,9 +79,8 @@ void loop() {
     break;
 
     case 4://etat 4 (turn)
-      b=reception_trame[0];//stocage de la trame 0
       dist=(long)(coeficien_turn*(float)reception_trame[4]);//calcule du nombre de pas pour les roue sans le signe de la direction
-      if ((b&=1<<4)==1<<4)sense=-1;//teste pour conaitre le sance de la translation
+      if (iso_bite(reception_trame[0],4)==1<<4)sense=-1;//teste pour conaitre le sance de la translation
       else sense=1;
       motor_D.move(dist*sense);//activation de la rotation jusque cette valeur de pas moteur droite
       motor_G.move(dist*sense);//activation de la rotation jusque cette valeur de pas moteur gauche
@@ -95,24 +90,18 @@ void loop() {
 
     case 5://attante de fin adr_deplacement
       if(motor_D.isRunning()==false && motor_G.isRunning()==false){//teste des morteur a l'arrée pour pacer au d'éplacemnt suivant
-        c=reception_trame[0];//stocage de la trame 0
-        d=reception_trame[0];//stocage de la trame 0
-        e=reception_trame[0];//stocage de la trame 0
-        f=reception_trame[0];//stocage de la trame 0
-        g=reception_trame[0];//stocage de la trame 0
-        h=reception_trame[0];//stocage de la trame 0
-        if(etatp==2 && ((c&=1<<3)==(1<<3)))etat=3;//passe a l'état 3 si état précédant etait 2 et si le go est activer
-        else if (etatp==2 && ((d&=1<<5)==(1<<5)))etat=4;//si non passe a l état 4 si etat précédan etait 2 et si turn 2 est activer
-        else if (etatp==3 && ((e&=1<<5)==(1<<5)))etat=4;//si non passe a l'état 5 si etat précédan etait 3 et si turn 2 est activer
+        if(etatp==2 && (iso_bite(reception_trame[0],3)==(1<<3)))etat=3;//passe a l'état 3 si état précédant etait 2 et si le go est activer
+        else if (etatp==2 && (iso_bite(reception_trame[0],5)==(1<<5)))etat=4;//si non passe a l état 4 si etat précédan etait 2 et si turn 2 est activer
+        else if (etatp==3 && (iso_bite(reception_trame[0],5)==(1<<5)))etat=4;//si non passe a l'état 5 si etat précédan etait 3 et si turn 2 est activer
         else if (etatp==4){//si non passe a l'état 1 si on vient de l'etat 4
           etat=1;//passe a l'état 1
           com=0;// passe a com a 0 car fin du dépalcment
         }
-        else if (etatp==3&&((f&1<<5)==0)){//si non passe passe a l'état 1 si pas de turn 2
+        else if (etatp==3&&(iso_bite(reception_trame[0],5)==0)){//si non passe passe a l'état 1 si pas de turn 2
           etat=1;//passe a l'état 1
           com=0;// passe a com a 0 car fin du dépalcment
         }
-        else if (etatp==2&&((g&1<<3)==0)&&((h&1<<5)==0)){//si non passe a l'état 1 si pas de turn 2 et de go
+        else if (etatp==2&&(iso_bite(reception_trame[0],3)==0)&&(iso_bite(reception_trame[0],5)==0)){//si non passe a l'état 1 si pas de turn 2 et de go
           etat=1;//passe a l'état 1
           com=0;// passe a com a 0 car fin du dépalcment
         }
@@ -132,4 +121,8 @@ void receiveEvent(int howMany){//fonction d'intérupetion l'or dun envoi du mait
 
 void requestEvent(){//fonciton d'intérupetion l'or d une deamande de trame
   Wire.write(com);//le maitre lira la valeur de com
+}
+
+byte iso_bite(byte analiser, byte decalage){
+  return (analiser &=1<<decalage);
 }

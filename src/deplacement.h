@@ -19,7 +19,7 @@
 #define dir_D     12
 
 
-#define acceleration  100
+#define acceleration  335//acelearion du robo x 2coéficien_go
 #define speed         100
 
 #define coeficien_turn 36.841030522//coéficiant determiner par rapore au diamétre de roue, sélection du pas(ici 1/4),le tout pour 1°
@@ -33,3 +33,9 @@ void receiveEvent(int howMany);
 void requestEvent();
 //fonction pour quan le maitre appelle l'esclave
 //ranvoi si l'esclave et prés a recevoire une trame(déplacment fini)
+
+byte iso_bite(byte analiser, byte decalage);
+//vas isoler le bite du decalge
+//analise = xxxx xxxx
+//dealage = 2
+//return = 0000 00x00
