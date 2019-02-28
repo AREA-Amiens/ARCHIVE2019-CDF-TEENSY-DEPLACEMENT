@@ -5,6 +5,7 @@
         //AccelStepper motor_left(1, step_left, dir_left); definie la comme avec le diver
         //
 #include <MultiStepper.h> //getion simultaner de moteur pas a pas limieter
+#include <math.h>//pour les calcule
 
 #define my_adr 10         //mon adresse bus I2C
 
@@ -22,8 +23,10 @@
 #define acceleration  335//acelearion du robo x 2coéficien_go
 #define speed         100
 
-#define coeficien_turn 36.841030522//coéficiant determiner par rapore au diamétre de roue, sélection du pas(ici 1/4),le tout pour 1°
-#define coeficien_go   8.376754456//coéficiant determiner par rapore au diamétre de roue, sélection du pas(ici 1/4),le tout pour 1mm
+#define coeficien_turn 17.81426307//coéficiant determiner par rapore au diamétre de roue, sélection du pas(ici 1/4),le tout pour 1°
+#define coeficien_go   7.520210565//coéficiant determiner par rapore au diamétre de roue, sélection du pas(ici 1/4),le tout pour 1mm
+
+#define pi 3.1415926536//
 
 void receiveEvent(int howMany);
 //fonction pour quan l'ésclave resoi une trame de adr_actionneur
