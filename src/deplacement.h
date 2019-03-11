@@ -4,8 +4,8 @@
 #include <AccelStepper.h> //un moteur pas a pas
         //AccelStepper motor_left(1, step_left, dir_left); definie la comme avec le diver
         //
-#include <MultiStepper.h> //getion simultaner de moteur pas a pas limieter
-#include <math.h>//pour les calcule
+#include <MultiStepper.h> //getion simultaner de moteur pas a pas limiter
+#include <math.h>//pour les calculs
 
 #define my_adr 10         //mon adresse bus I2C
 
@@ -20,25 +20,25 @@
 #define dir_D     12
 
 
-#define acceleration  335//acelearion du robo x 2coéficien_go
+#define acceleration  335//accélération du robot x 2coéficient_go
 #define speed         100
 
-#define coeficien_turn 17.81426307//coéficiant determiner par rapore au diamétre de roue, sélection du pas(ici 1/4),le tout pour 1°
-#define coeficien_go   7.520210565//coéficiant determiner par rapore au diamétre de roue, sélection du pas(ici 1/4),le tout pour 1mm
+#define coeficien_turn 17.81426307//coefficiant determiné par rapport au diamètre de roue, sélection du pas(ici 1/4),le tout pour 1°
+#define coeficien_go   7.520210565//coefficiant determiné par rapport au diamètre de roue, sélection du pas(ici 1/4),le tout pour 1mm
 
 #define pi 3.1415926536//
 
 void receiveEvent(int howMany);
-//fonction pour quan l'ésclave resoi une trame de adr_actionneur
+//fonction pour quand l'esclave reçoit une trame de adr_actionneur
 //met la trame dans un tableau
 
 
 void requestEvent();
-//fonction pour quan le maitre appelle l'esclave
-//ranvoi si l'esclave et prés a recevoire une trame(déplacment fini)
+//fonction pour quand le maitre appelle l'esclave
+//renvoi si l'esclave et pret à recevoir une trame(déplacment fini)
 
 byte iso_bite(byte analiser, byte decalage);
-//vas isoler le bite du decalge
+//va isoler le bite du decalge
 //analise = xxxx xxxx
 //dealage = 2
 //return = 0000 00x00

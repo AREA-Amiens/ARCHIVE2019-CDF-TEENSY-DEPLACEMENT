@@ -5,8 +5,8 @@ AccelStepper motor_G(1, step_G, dir_G);//declaration du moteur gauche
 AccelStepper motor_D(1, step_D, dir_D);//declatation du moteur droit
 
 byte mouvement,recepetion_tram[4],tableau_dep[5],com,etat=0,etatp=0;
-int xp=750,yp=2700,ap=0;
-int go=0,turn1=0,turn1p=0,turn2=0,turn2p=0,turnar,turnarp,turnactu=0,x=750,y=2700;
+int xp=1240,yp=1740,ap=0;
+int go=0,turn1=0,turn1p=0,turn2=0,turn2p=0,turnar,turnarp,turnactu=0,x=1240,y=1740;
 //com pout savoir si une nouvelle comunication est posible avec le métre
 //etat variable de la machine d'état +mise a l'état 0 voir sur la machine d'état
 //etatp variable donnant l'état précédant
@@ -58,12 +58,6 @@ void loop() {
   switch (etat){//permet de réaliser les différent etat de la machinne d'etat
     case 1://etat 1 (antante de com)
     if (com==1){//si nous avons communication alors on redirige vert les diférant état
-      Serial.print("etat 1 : ");
-      for(i=0;i<4;i++){
-        Serial.print(recepetion_tram[i]);
-        Serial.print(" ");
-      }
-      Serial.println(" ");
 
       mouvement=0;//mise a zero des diférante chose a fair et dans quelle sanse
       e=recepetion_tram[0];//mise en mémoire de la trame 0
@@ -112,12 +106,6 @@ void loop() {
       motor_G.move(pas*sense);//activation de la rotation jusque cette valeur de pas moteur gauche
       etat=5;//passe a l etat 5
       etatp=2;//passe l'étatpe précédante a 2
-      //turnactu=turnactu+turn1;
-      turnactu=turnactu%360;
-      Serial.print("etat 2 turn1 ");
-      Serial.print(turn1);
-      Serial.print("  turnactu ");
-      Serial.println(turnactu);
     break;
 
     case 3://etat 3 (go)
@@ -128,10 +116,6 @@ void loop() {
       motor_G.move(pas*(-sense));//activation de la rotation jusque cette valeur de pas moteur gauche
       etat=5;//passe a l etat 5
       etatp=3;//passe l'étatpe précédante a 3
-      Serial.print("etat 3 go ");
-      Serial.print(go);
-      Serial.print("  turnactu ");
-      Serial.println(turnactu);
     break;
 
     case 4://etat 4 (turn)
@@ -151,10 +135,6 @@ void loop() {
       etatp=4;//passe l'étatpe précédante a 4
       turnactu=turnactu+turn2;
       turnactu=turnactu%360;
-      Serial.print("etat 4 turn2 ");
-      Serial.print(turn2);
-      Serial.print("  turnactu ");
-      Serial.println(turnactu);
     break;
 
     case 5://attante de fin adr_deplacement
