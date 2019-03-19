@@ -5,8 +5,8 @@ AccelStepper motor_G(1, step_G, dir_G);//declaration du moteur gauche
 AccelStepper motor_D(1, step_D, dir_D);//declatation du moteur droit
 
 byte mouvement,recepetion_tram[4],tableau_dep[5],com,etat=0,etatp=0;
-int xp=1240,yp=1740,ap=0;
-int go=0,turn1=0,turn1p=0,turn2=0,turn2p=0,turnar,turnarp,turnactu=0,x=1240,y=1740;
+int xp=750,yp=2700,ap=0;
+int go=0,turn1=0,turn1p=0,turn2=0,turn2p=0,turnar,turnarp,turnactu=0,x=750,y=2700;
 //com pout savoir si une nouvelle comunication est posible avec le métre
 //etat variable de la machine d'état +mise a l'état 0 voir sur la machine d'état
 //etatp variable donnant l'état précédant
@@ -71,10 +71,6 @@ void loop() {
       go = (int)sqrt((double)pow((x-xp),2)+pow((y-yp),2));//valeur du go dans le turn go turn
       if (go!=0)mouvement|=(1<<3);//dit pour la suitte qu il faut avancer
       turnar=(int)(recepetion_tram[3]+((f&=(0x80))<<1));//valuer de langle d'arriver
-      Serial.print("etatp 1 turnar=");
-      Serial.print(0xB4);
-      Serial.print("  ");
-      Serial.println(recepetion_tram[3]);
       //determination de l'angle du turn 1 pour rejoindre le nouvaux x et y
       if(go!=0)turn1=360-(int)((float)atan((double)(((float)(y-yp))/((float)(x-xp))))*(float)180/pi)-turnactu;
       else turn1=0;
@@ -162,6 +158,7 @@ void loop() {
   motor_G.run();//lancemant du moteur gauche
   //mise a jour afficheur
 }
+
 void receiveEvent(int howMany){//fonction d'intérupetion l'or dun envoi du maitre
   byte i;//variable pour le for
   for(i=0;i<howMany;i++)recepetion_tram[i]=Wire.read();//rampli le tableau si avec les valeur de la transmition
