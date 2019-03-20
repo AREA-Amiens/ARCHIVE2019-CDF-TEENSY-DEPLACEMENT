@@ -7,6 +7,11 @@
 #include <MultiStepper.h> //getion simultaner de moteur pas a pas limiter
 #include <math.h>//pour les calculs
 
+typedef struct{
+  int x=750;
+  int y=2700;
+}pos;
+
 #define my_adr 10         //mon adresse bus I2C
 
 #define reset_G   13 // pin du moteur gauche
@@ -20,7 +25,7 @@
 #define dir_D     12
 
 
-#define acceleration  335//accélération du robot x 2coéficient_go
+#define acceleration  1500//accélération du robot x 2coéficient_go
 #define speed         100
 
 #define coeficien_turn 17.81426307//coefficiant determiné par rapport au diamètre de roue, sélection du pas(ici 1/4),le tout pour 1°
@@ -42,3 +47,6 @@ byte iso_bite(byte analiser, byte decalage);
 //analise = xxxx xxxx
 //dealage = 2
 //return = 0000 00x00
+
+pos position (pos a);
+//renvoie position de x et y

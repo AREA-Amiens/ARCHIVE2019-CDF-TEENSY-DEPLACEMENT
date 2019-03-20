@@ -6,10 +6,14 @@ AccelStepper motor_D(1, step_D, dir_D);//declatation du moteur droit
 
 byte mouvement,recepetion_tram[4],tableau_dep[5],com,etat=0,etatp=0;
 int xp=750,yp=2700,ap=0;
-int go=0,turn1=0,turn1p=0,turn2=0,turn2p=0,turnar,turnarp,turnactu=0,x=750,y=2700;
+int go=0, turn1=0,turn1p=0,turn2=0,turn2p=0,turnar,turnarp,turnactu=0;
+pos a;
+
 //com pout savoir si une nouvelle comunication est posible avec le métre
 //etat variable de la machine d'état +mise a l'état 0 voir sur la machine d'état
 //etatp variable donnant l'état précédant
+
+
 
 //le setup ne sexcute qune seul foi lor du demarage de la teensi
 void setup() {
@@ -45,11 +49,12 @@ void setup() {
 }
 void loop() {
   //byte utiliser pour la mémoire de de la trame t[0]
-  long dist;
+  //long dist;
   long pas;//varible coréspondant a la distance a par courir elle ne comprote pas de sance
   int sense;//sense variable relative au sance de la rotation ou de la direction du go
-  byte i;
+  //byte i;
   byte e,f,g;
+
   //mise a jour capteur
   //mise a jour etat
   //mise a jour actionneur
@@ -57,27 +62,27 @@ void loop() {
 
   switch (etat){//permet de réaliser les différent etat de la machinne d'etat
     case 1://etat 1 (antante de com)
-    if (com==1){//si nous avons communication alors on redirige vert les diférant état
+    if (com==1){//si nous avons communication alors on redirige vert les diférant état + analyser la trame
 
       mouvement=0;//mise a zero des diférante chose a fair et dans quelle sanse
       e=recepetion_tram[0];//mise en mémoire de la trame 0
       f=recepetion_tram[0];
       g=recepetion_tram[0];
-      xp=x;//remplisage de xp(positon actuelle de x)
-      yp=y;//remplisage de yp(positon actuelle de y)
+      xp=a.x;//remplisage de xp(positon actuelle de x)
+      yp=a.y;//remplisage de yp(positon actuelle de y)
 
-      x=(int)(recepetion_tram[1]+((e&=(0x70))<<4));//valeur des x et y à attindre
-      y=(int)(recepetion_tram[2]+((f&=(0x0F))<<8));
-      go = (int)sqrt((double)pow((x-xp),2)+pow((y-yp),2));//valeur du go dans le turn go turn
+      a=position(a);
+
+      go = (int)sqrt((double)pow((a.x-xp),2)+pow((a.y-yp),2));//valeur du go dans le turn go turn
       if (go!=0)mouvement|=(1<<3);//dit pour la suitte qu il faut avancer
       turnar=(int)(recepetion_tram[3]+((f&=(0x80))<<1));//valuer de langle d'arriver
       //determination de l'angle du turn 1 pour rejoindre le nouvaux x et y
-      if(go!=0)turn1=360-(int)((float)atan((double)(((float)(y-yp))/((float)(x-xp))))*(float)180/pi)-turnactu;
+      if(go!=0)turn1=360-(int)((float)atan((double)(((float)(a.y-yp))/((float)(a.x-xp))))*(float)180/pi)-turnactu;
       else turn1=0;
 
       mouvement|=1<<5;//active l'étape de turn 2
-      if((y-yp)<0)turn1=turn1-360;//ajous d'angle du a la fonciton tnagnete
-      if((x-xp)<0)turn1=turn1+180;
+      if((a.y-yp)<0)turn1=turn1-360;//ajous d'angle du a la fonciton tnagnete
+      if((a.x-xp)<0)turn1=turn1+180;
       turn1=turn1%360;//pour suprimet les tour sur lui mêmme
       turn2=360-turn1p+turnar-turnactu;
 
@@ -171,4 +176,14 @@ void requestEvent(){//fonciton d'intérupetion l'or d une deamande de trame
 
 byte iso_bite(byte analiser, byte decalage){
   return (analiser &=1<<decalage);
+}
+pos position (pos a){
+  byte e,f;
+  e=recepetion_tram[0];//mise en mémoire de la trame 0
+  f=recepetion_tram[0];
+
+  a.x=(int)(recepetion_tram[1]+((e&=(0x70))<<4));//valeur des x et y à attindre
+  a.y=(int)(recepetion_tram[2]+((f&=(0x0F))<<8));
+
+  return a;
 }
