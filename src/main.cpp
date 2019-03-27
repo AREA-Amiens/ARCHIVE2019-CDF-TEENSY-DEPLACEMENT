@@ -4,9 +4,9 @@
 AccelStepper motor_G(1, step_G, dir_G);//declaration du moteur gauche
 AccelStepper motor_D(1, step_D, dir_D);//declatation du moteur droit
 
-byte mouvement,recepetion_tram[4],tableau_dep[5],com,etat=0,etatp=0;
+byte mouvement,recepetion_tram[4],tableau_dep[5],com,etat=0,etatp=0,avar=0;
 int xp=750,yp=2700,ap=0;
-int go=0, turn1=0,turn1p=0,turn2=0,turn2p=0,turnar,turnarp,turnactu=0;
+int go=0, turndepart=0,turndepartp=0,turnarrive=0,turnarrivep=0,turnar,turnarp,turnactu=0;
 pos a;
 
 //com pout savoir si une nouvelle comunication est posible avec le métre
@@ -77,21 +77,27 @@ void loop() {
       if (go!=0)mouvement|=(1<<3);//dit pour la suitte qu il faut avancer
       turnar=(int)(recepetion_tram[3]+((f&=(0x80))<<1));//valuer de langle d'arriver
       //determination de l'angle du turn 1 pour rejoindre le nouvaux x et y
-      if(go!=0)turn1=360-(int)((float)atan((double)(((float)(a.y-yp))/((float)(a.x-xp))))*(float)180/pi)-turnactu;
-      else turn1=0;
+      if(go!=0)turndepart=360-(int)((float)atan((double)(((float)(a.y-yp))/((float)(a.x-xp))))*(float)180/pi)-turnactu;
+      else turndepart=0;
 
       mouvement|=1<<5;//active l'étape de turn 2
-      if((a.y-yp)<0)turn1=turn1-360;//ajous d'angle du a la fonciton tnagnete
-      if((a.x-xp)<0)turn1=turn1+180;
-      turn1=turn1%360;//pour suprimet les tour sur lui mêmme
-      turn2=360-turn1p+turnar-turnactu;
+      if((a.y-yp)<0)turndepart=turndepart-360;//ajous d'angle du a la fonciton tnagnete
+      if((a.x-xp)<0)turndepart=turndepart+180;
+      turndepart=turndepart%360;//pour suprimet les tour sur lui mêmme
+      turnarrive=360-turndepartp+turnar-turnactu;
 
-      if(turn1>180){//pour eviter de fair plus que 180 degrai
-        turn1=360-turn1;
+      if(turndepart>180){//pour eviter de fair plus que 180 degrai
+        turndepart=360-turndepart;
         mouvement|=1<<0;//activation du sence inverce de rotation
+        avar=0;
       }
-      if(turn1!=0)mouvement|=1<<1;//active l'étape de turn 1 + sence du turn
+      if(turndepart!=0)mouvement|=1<<1;//active l'étape de turn 1 + sence du turn
 
+      if(turndepart>90){ //changement d'angle pour passer en marche arriere
+        turndepart=180-turndepart;
+        mouvement|=1<<0;
+        avar=1;
+      }
 
       if(iso_bite(mouvement,1)==(1<<1))etat=2;//passage a l'état2 si il et activer dans la trame
       else if(iso_bite(mouvement,3)==(1<<3))etat=3;//passage a l'état3 si l'état 2 n est pas activer et l'état 3 est activer dans la trame
@@ -99,10 +105,19 @@ void loop() {
     }
     break;
 
-    case 2://etat 2 (turn1)
-      pas=(long)(coeficien_turn*(float)turn1);//calcule du nombre de pas pour les roue sans le signe de la direction
-      if (iso_bite(mouvement,0)==1<<0){sense=-1;turnactu=turnactu+360-turn1;}//teste pour conaitre le sance de la rotation
-      else {sense=1;turnactu=turnactu+turn1;}
+    case 2://etat 2 (turndepart)
+      pas=(long)(coeficien_turn*(float)turndepart);//calcule du nombre de pas pour les roue sans le signe de la direction
+      if (iso_bite(mouvement,0)==1<<0){sense=-1;turnactu=turnactu+360-turndepart;}//teste pour conaitre le sance de la rotation
+      else {
+        if (avar==0){
+          sense=1;turnactu=turnactu+turndepart;
+          }
+          else{
+            if (avar==1) {
+              sense=-1;turnactu=turnactu+turndepart;
+            }
+          }
+        }
       motor_D.move(pas*sense);//activation de la rotation jusque cette valeur de pas moteur droite
       motor_G.move(pas*sense);//activation de la rotation jusque cette valeur de pas moteur gauche
       etat=5;//passe a l etat 5
@@ -120,21 +135,21 @@ void loop() {
     break;
 
     case 4://etat 4 (turn)
-      turn2=360-turnactu+turnar;
-      turn2=turn2%360;
-      if(turn2>180){//pour eviter de fair plus que 180 degrai
-        turn2=360-turn2;
+      turnarrive=360-turnactu+turnar;
+      turnarrive=turnarrive%360;
+      if(turnarrive>180){//pour eviter de fair plus que 180 degrai
+        turnarrive=360-turnarrive;
         mouvement|=1<<4;//activation du sence inverce de rotation
         turnactu=turnactu+180;
       }
-      pas=(long)(coeficien_turn*(float)turn2);//calcule du nombre de pas pour les roue sans le signe de la direction
+      pas=(long)(coeficien_turn*(float)turnarrive);//calcule du nombre de pas pour les roue sans le signe de la direction
       if (iso_bite(mouvement,4)==1<<4)sense=-1;//turnactu=turnactu+180;}//teste pour conaitre le sance de la translation
       else sense=1;
       motor_D.move(pas*sense);//activation de la rotation jusque cette valeur de pas moteur droite
       motor_G.move(pas*sense);//activation de la rotation jusque cette valeur de pas moteur gauche
       etat=5;//passe a l etat 5
       etatp=4;//passe l'étatpe précédante a 4
-      turnactu=turnactu+turn2;
+      turnactu=turnactu+turnarrive;
       turnactu=turnactu%360;
     break;
 
