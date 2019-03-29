@@ -91,13 +91,15 @@ void loop() {
         mouvement|=1<<0;//activation du sence inverce de rotation
         avar=0;
       }
-      if(turndepart!=0)mouvement|=1<<1;//active l'étape de turn 1 + sence du turn
 
       if(turndepart>90){ //changement d'angle pour passer en marche arriere
-        turndepart=180-turndepart;
+        turndepart=(180-turndepart)*-1;
+        go=go*-1;
         mouvement|=1<<0;
         avar=1;
+        Serial.println("ok\n");
       }
+      if(turndepart!=0)mouvement|=1<<1;//active l'étape de turn 1 + sence du turn
 
       if(iso_bite(mouvement,1)==(1<<1))etat=2;//passage a l'état2 si il et activer dans la trame
       else if(iso_bite(mouvement,3)==(1<<3))etat=3;//passage a l'état3 si l'état 2 n est pas activer et l'état 3 est activer dans la trame
@@ -109,14 +111,7 @@ void loop() {
       pas=(long)(coeficien_turn*(float)turndepart);//calcule du nombre de pas pour les roue sans le signe de la direction
       if (iso_bite(mouvement,0)==1<<0){sense=-1;turnactu=turnactu+360-turndepart;}//teste pour conaitre le sance de la rotation
       else {
-        if (avar==0){
-          sense=1;turnactu=turnactu+turndepart;
-          }
-          else{
-            if (avar==1) {
-              sense=-1;turnactu=turnactu+turndepart;
-            }
-          }
+        sense=1;turnactu=turnactu+turndepart;
         }
       motor_D.move(pas*sense);//activation de la rotation jusque cette valeur de pas moteur droite
       motor_G.move(pas*sense);//activation de la rotation jusque cette valeur de pas moteur gauche
