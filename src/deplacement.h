@@ -8,8 +8,8 @@
 #include <math.h>//pour les calculs
 
 typedef struct{
-  int x=750;
-  int y=2700;
+  int x;
+  int y;
 }pos;
 
 #define my_adr 10         //mon adresse bus I2C

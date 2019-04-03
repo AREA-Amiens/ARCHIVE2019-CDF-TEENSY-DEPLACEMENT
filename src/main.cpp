@@ -1,11 +1,11 @@
 #include "deplacement.h"
-
+//v2
 //deplacement scotch
 AccelStepper motor_G(1, step_G, dir_G);//declaration du moteur gauche
 AccelStepper motor_D(1, step_D, dir_D);//declatation du moteur droit
 
 byte mouvement,recepetion_tram[4],tableau_dep[5],com,etat=0,etatp=0,avar=0;
-int xp=750,yp=2700,ap=0;
+int xp=750,yp=300,ap=0;
 int go=0, turndepart=0,turndepartp=0,turnarrive=0,turnarrivep=0,turnar,turnarp,turnactu=0;
 pos renvoie;
 
@@ -16,10 +16,19 @@ pos renvoie;
 
 
 //le setup ne sexcute qune seul foi lor du demarage de la teensi
-void setup() {
+void setup(){
   byte i;//variable pour le for
+<<<<<<< HEAD
   renvoie.x=750;
   renvoie.y=2700;
+=======
+  //cotée rouge
+//  a.x=750;
+//  a.y=300;
+//cotée bleu
+  a.x=750;
+  a.y=2700;
+>>>>>>> bda7aa49729a0443804657aa8814fef07c5c0f78
   Serial.begin(9600);
   //lancemant dune liason serie pour comuniquer avec l'ordinateur sutilise Serial.prinln(valeur ou variable)
   Wire.begin(my_adr);//lancemenant de la liason i²c avec son adresse d'esclave
@@ -86,7 +95,6 @@ void loop() {
       if((renvoie.y-yp)<0)turndepart=turndepart-360;//ajous d'angle du a la fonciton tnagnete
       if((renvoie.x-xp)<0)turndepart=turndepart+180;
       turndepart=turndepart%360;//pour suprimet les tour sur lui mêmme
-      turnarrive=360-turndepartp+turnar-turnactu;
 
       if(turndepart>180){//pour eviter de fair plus que 180 degrai
         turndepart=360-turndepart;
@@ -94,8 +102,14 @@ void loop() {
       }
       Serial.println(turndepart);
 
+<<<<<<< HEAD
       if(turndepart>90 || turndepart<-90){ //changement d'angle pour passer en marche arriere
         if(turndepart>90){
+=======
+
+      if(turndepart>90){ //changement d'angle pour passer en marche arriere
+
+>>>>>>> bda7aa49729a0443804657aa8814fef07c5c0f78
         turndepart=(180-turndepart)*-1;
         }
         else {
@@ -105,8 +119,12 @@ void loop() {
         }
         go=go*-1;
         mouvement|=1<<0;
+<<<<<<< HEAD
         Serial.println("ok");
         //Serial.println("ok")
+=======
+        avar=1;
+>>>>>>> bda7aa49729a0443804657aa8814fef07c5c0f78
       }
 
       if(turndepart!=0)mouvement|=1<<1;//active l'étape de turn 1 + sence du turn
@@ -119,7 +137,7 @@ void loop() {
 
     case 2://etat 2 (turndepart)
       pas=(long)(coeficien_turn*(float)turndepart);//calcule du nombre de pas pour les roue sans le signe de la direction
-      if (iso_bite(mouvement,0)==1<<0){sense=-1;turnactu=turnactu+360-turndepart;}//teste pour conaitre le sance de la rotation
+      if (iso_bite(mouvement,0)==1<<0){sense=-1;turnactu=turnactu+turndepart;}//teste pour conaitre le sance de la rotation
       else {
         sense=1;turnactu=turnactu+turndepart;
         }
@@ -145,6 +163,7 @@ void loop() {
       if(turnarrive>180){//pour eviter de fair plus que 180 degrai
         turnarrive=360-turnarrive;
         mouvement|=1<<4;//activation du sence inverce de rotation
+<<<<<<< HEAD
       }
       turnactu=turnarrive;
 
@@ -153,6 +172,12 @@ void loop() {
         go=go*-1;
         mouvement|=1<<0;
       }*/
+=======
+        //turnactu=turnactu+180+turnarrive;
+      }
+      //else turnactu=turnactu-turnarrive;
+      turnactu=turnar;
+>>>>>>> bda7aa49729a0443804657aa8814fef07c5c0f78
       pas=(long)(coeficien_turn*(float)turnarrive);//calcule du nombre de pas pour les roue sans le signe de la direction
       if (iso_bite(mouvement,4)==1<<4)sense=-1;//turnactu=turnactu+180;}//teste pour conaitre le sance de la translation
       else sense=1;
@@ -160,7 +185,7 @@ void loop() {
       motor_G.move(pas*sense);//activation de la rotation jusque cette valeur de pas moteur gauche
       etat=5;//passe a l etat 5
       etatp=4;//passe l'étatpe précédante a 4
-      turnactu=turnactu+turnarrive;
+
       turnactu=turnactu%360;
     break;
 
