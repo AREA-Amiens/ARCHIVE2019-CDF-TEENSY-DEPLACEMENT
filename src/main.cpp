@@ -1,5 +1,5 @@
 #include "deplacement.h"
-
+//v2
 //deplacement scotch
 AccelStepper motor_G(1, step_G, dir_G);//declaration du moteur gauche
 AccelStepper motor_D(1, step_D, dir_D);//declatation du moteur droit
@@ -96,7 +96,8 @@ void loop() {
         mouvement|=1<<0;//activation du sence inverce de rotation
         avar=0;
       }
-      Serial.println(turndepart);
+
+
       if(turndepart>90){ //changement d'angle pour passer en marche arriere
 
         turndepart=(180-turndepart)*-1;
