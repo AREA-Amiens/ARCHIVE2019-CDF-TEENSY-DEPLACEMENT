@@ -4,10 +4,12 @@
 AccelStepper motor_G(1, step_G, dir_G);//declaration du moteur gauche
 AccelStepper motor_D(1, step_D, dir_D);//declatation du moteur droit
 
-byte mouvement,recepetion_tram[4],tableau_dep[5],com,etat=0,etatp=0,avar=0;
+byte mouvement,recepetion_tram[4],tableau_dep[5],com=3,etat=0,etatp=0,avar=0,NBbyte=0;
 int xp=750,yp=300,ap=0;
 int go=0, turndepart=0,turndepartp=0,turnarrive=0,turnarrivep=0,turnar,turnarp,turnactu=0;
-pos renvoie;
+pos pos1;
+pos pos1pre;
+pos posdeb;
 
 //com pout savoir si une nouvelle comunication est posible avec le métre
 //etat variable de la machine d'état +mise a l'état 0 voir sur la machine d'état
@@ -17,18 +19,8 @@ pos renvoie;
 
 //le setup ne sexcute qune seul foi lor du demarage de la teensi
 void setup(){
-  byte i;//variable pour le for
-<<<<<<< HEAD
-  renvoie.x=750;
-  renvoie.y=2700;
-=======
-  //cotée rouge
-//  a.x=750;
-//  a.y=300;
-//cotée bleu
-  a.x=750;
-  a.y=2700;
->>>>>>> bda7aa49729a0443804657aa8814fef07c5c0f78
+  byte i,e,f,g;//variable pour le for
+
   Serial.begin(9600);
   //lancemant dune liason serie pour comuniquer avec l'ordinateur sutilise Serial.prinln(valeur ou variable)
   Wire.begin(my_adr);//lancemenant de la liason i²c avec son adresse d'esclave
@@ -54,9 +46,19 @@ void setup(){
   motor_D.setAcceleration(acceleration);
 
 
-
   for(i=0;i<3;i++)recepetion_tram[i]=0;//ramplit de zero le tableau de réception
-  etat=1;//passage a l'état 1 voir la machine d'état
+
+  com=3;
+  while (com!=1) {
+    Serial.print("x ");
+    Serial.println(pos1.x);
+  }
+  com=0;
+  pos1=position(pos1);
+  pos1pre.x=pos1.x;//remplisage de xp(positon actuelle de x)
+  pos1pre.y=pos1.y;//remplisage de yp(positon actuelle de y)  com=0;
+  etat=1;
+//etat=1;//passage a l'état 1 voir la machine d'état
 }
 void loop() {
   //byte utiliser pour la mémoire de de la trame t[0]
@@ -69,8 +71,6 @@ void loop() {
   //mise a jour etat
   //mise a jour actionneur
 
-
-
   switch (etat){//permet de réaliser les différent etat de la machinne d'etat
     case 1://etat 1 (antante de com)
     if (com==1){//si nous avons communication alors on redirige vert les diférant état + analyser la trame
@@ -79,53 +79,47 @@ void loop() {
       e=recepetion_tram[0];//mise en mémoire de la trame 0
       f=recepetion_tram[0];
       g=recepetion_tram[0];
-      xp=renvoie.x;//remplisage de xp(positon actuelle de x)
-      yp=renvoie.y;//remplisage de yp(positon actuelle de y)
+      /*xp=pos1.x;//remplisage de xp(positon actuelle de x)
+      yp=pos1.y;//remplisage de yp(positon actuelle de y)*/
+      posdeb=pos1;
 
-      renvoie=position(renvoie);
+      pos1=position(pos1);
 
-      go = (int)sqrt((double)pow((renvoie.x-xp),2)+pow((renvoie.y-yp),2));//valeur du go dans le turn go turn
+      go = (int)sqrt((double)pow((pos1.x-posdeb.x),2)+pow((pos1.y-posdeb.y),2));//valeur du go dans le turn go turn
       if (go!=0)mouvement|=(1<<3);//dit pour la suitte qu il faut avancer
       turnar=(int)(recepetion_tram[3]+((f&=(0x80))<<1));//valuer de langle d'arriver
       //determination de l'angle du turn 1 pour rejoindre le nouvaux x et y
-      if(go!=0)turndepart=360-(int)((float)atan((double)(((float)(renvoie.y-yp))/((float)(renvoie.x-xp))))*(float)180/pi)-turnactu;
+      if(go!=0)turndepart=360-(int)((float)atan((double)(((float)(pos1.y-posdeb.y))/((float)(pos1.x-posdeb.x))))*(float)180/pi)-turnactu;
       else turndepart=0;
 
       mouvement|=1<<5;//active l'étape de turn 2
-      if((renvoie.y-yp)<0)turndepart=turndepart-360;//ajous d'angle du a la fonciton tnagnete
-      if((renvoie.x-xp)<0)turndepart=turndepart+180;
+      if((pos1.y-posdeb.y)<0)turndepart=turndepart-360;//ajous d'angle du a la fonciton tnagnete
+      if((pos1.x-posdeb.x)<0)turndepart=turndepart+180;
       turndepart=turndepart%360;//pour suprimet les tour sur lui mêmme
 
       if(turndepart>180){//pour eviter de fair plus que 180 degrai
         turndepart=360-turndepart;
         mouvement|=1<<0;//activation du sence inverce de rotation
       }
-      Serial.println(turndepart);
 
-<<<<<<< HEAD
-      if(turndepart>90 || turndepart<-90){ //changement d'angle pour passer en marche arriere
-        if(turndepart>90){
-=======
+      //if(turndepart>90 || turndepart<-90){ //changement d'angle pour passer en marche arriere
 
-      if(turndepart>90){ //changement d'angle pour passer en marche arriere
 
->>>>>>> bda7aa49729a0443804657aa8814fef07c5c0f78
+      if(abs(turndepart)>90){ //changement d'angle pour passer en marche arriere
+      if(turndepart>90){
         turndepart=(180-turndepart)*-1;
         }
         else {
-          if (turndepart<-90) {
-            turndepart=(180+turndepart);
+          if(turndepart<-90){
+            turndepart=180-turndepart;
           }
         }
         go=go*-1;
         mouvement|=1<<0;
-<<<<<<< HEAD
-        Serial.println("ok");
-        //Serial.println("ok")
-=======
-        avar=1;
->>>>>>> bda7aa49729a0443804657aa8814fef07c5c0f78
-      }
+        }
+        turndepart=turndepart%360;
+
+    //  }
 
       if(turndepart!=0)mouvement|=1<<1;//active l'étape de turn 1 + sence du turn
 
@@ -163,21 +157,10 @@ void loop() {
       if(turnarrive>180){//pour eviter de fair plus que 180 degrai
         turnarrive=360-turnarrive;
         mouvement|=1<<4;//activation du sence inverce de rotation
-<<<<<<< HEAD
       }
-      turnactu=turnarrive;
 
-  /*    if(turndepart>90){ //changement d'angle pour passer en marche arriere
-        turndepart=(180-turndepart)*-1;
-        go=go*-1;
-        mouvement|=1<<0;
-      }*/
-=======
-        //turnactu=turnactu+180+turnarrive;
-      }
       //else turnactu=turnactu-turnarrive;
       turnactu=turnar;
->>>>>>> bda7aa49729a0443804657aa8814fef07c5c0f78
       pas=(long)(coeficien_turn*(float)turnarrive);//calcule du nombre de pas pour les roue sans le signe de la direction
       if (iso_bite(mouvement,4)==1<<4)sense=-1;//turnactu=turnactu+180;}//teste pour conaitre le sance de la translation
       else sense=1;
@@ -218,7 +201,8 @@ void loop() {
 void receiveEvent(int howMany){//fonction d'intérupetion l'or dun envoi du maitre
   byte i;//variable pour le for
   for(i=0;i<howMany;i++)recepetion_tram[i]=Wire.read();//rampli le tableau si avec les valeur de la transmition
-  com=1;// passe la comme a 1 pour l'éxecution de la trame en cour
+    com=1;
+  // passe la comme a 1 pour l'éxecution de la trame en cour
 }
 
 void requestEvent(){//fonciton d'intérupetion l'or d une deamande de trame
@@ -228,13 +212,56 @@ void requestEvent(){//fonciton d'intérupetion l'or d une deamande de trame
 byte iso_bite(byte analiser, byte decalage){
   return (analiser &=1<<decalage);
 }
-pos position (pos renvoie){
+pos position (pos pos1){
   byte e,f;
   e=recepetion_tram[0];//mise en mémoire de la trame 0
   f=recepetion_tram[0];
 
-  renvoie.x=(int)(recepetion_tram[1]+((e&=(0x70))<<4));//valeur des x et y à attindre
-  renvoie.y=(int)(recepetion_tram[2]+((f&=(0x0F))<<8));
+  pos1.x=(int)(recepetion_tram[1]+((e&=(0x70))<<4));//valeur des x et y à attindre
+  pos1.y=(int)(recepetion_tram[2]+((f&=(0x0F))<<8));
 
-  return renvoie;
+  return pos1;
+}
+
+void recalagex (pos pos1){
+  byte calex;
+  int x;
+  x=pos1.x;
+  //détermine le chemin le plus court pour faire le recalage bordure
+  if(3000-pos1.x<pos1.x ){
+    pos1.x=3000;
+  }
+  else{
+    pos1.x=0;
+  }
+
+  //faire un go pour aller aux positions
+  while(calex!=1){
+      com=1;
+  }
+  //le go se termine quand les cales sont a 1
+  //retour position initial
+  pos1.x=x;
+}
+
+void recalagey (pos pos1){
+  byte caley;
+  int y;
+  y=pos1.y;
+
+  //détermine le chemin le plus court pour faire le recalage bordure
+  if(3000-pos1.y<pos1.y){
+    pos1.y=3000;
+  }
+  else{
+    pos1.y=0;
+  }
+
+  //faire un go pour aller aux positions
+  while(caley!=1){
+      com=1;
+  }
+  //le go se termine quand les cales sont a 1
+  //retour position initial
+  pos1.y=y;
 }
