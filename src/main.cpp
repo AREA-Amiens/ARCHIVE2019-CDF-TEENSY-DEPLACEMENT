@@ -4,7 +4,7 @@
 AccelStepper motor_G(1, step_G, dir_G);//declaration du moteur gauche
 AccelStepper motor_D(1, step_D, dir_D);//declatation du moteur droit
 
-byte mouvement,recepetion_tram[4],tableau_dep[5],com=3,etat=0,etatp=0,avar=0,NBbyte=0;
+byte mouvement,recepetion_tram[4],tableau_dep[5],com=0,etat=0,etatp=0,avar=0,NBbyte=0;
 int xp=750,yp=300,ap=0;
 int go=0, turndepart=0,turndepartp=0,turnarrive=0,turnarrivep=0,turnar,turnarp,turnactu=0;
 pos pos1;
@@ -48,7 +48,7 @@ motor_D.setAcceleration(acceleration);
 
 for(i=0;i<3;i++)recepetion_tram[i]=0;//ramplit de zero le tableau de réception
 
-com=3;
+com=0;
 while (com!=1) {
   Serial.print("x ");
   Serial.println(pos1.x);
@@ -202,6 +202,7 @@ void receiveEvent(int howMany){//fonction d'intérupetion l'or dun envoi du mait
 byte i;//variable pour le for
 for(i=0;i<howMany;i++)recepetion_tram[i]=Wire.read();//rampli le tableau si avec les valeur de la transmition
   com=1;
+  for(i=0;i<howMany;i++)Serial.println(recepetion_tram[i]);
 // passe la comme a 1 pour l'éxecution de la trame en cour
 }
 
