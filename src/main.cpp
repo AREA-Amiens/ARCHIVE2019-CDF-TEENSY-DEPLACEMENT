@@ -1,19 +1,25 @@
-#include "deplacement.h"
-//v2
-//deplacement scotch
+#include <deplacement.h>
 AccelStepper motor_G(1, step_G, dir_G);//declaration du moteur gauche
 AccelStepper motor_D(1, step_D, dir_D);//declatation du moteur droit
 
-byte mouvement,recepetion_tram[4],tableau_dep[5],com=0,etat=0,etatp=0,avar=0,NBbyte=0;
+Servo tour;
+
+byte teste=0;
+byte mouvement,recepetion_tram[5],tableau_dep[5],com=0,etat=0,etatp=0,avar=0,NBbyte=0;
 int xp=750,yp=300,ap=0;
 int go=0, turndepart=0,turndepartp=0,turnarrive=0,turnarrivep=0,turnar,turnarp,turnactu=0;
 pos pos1;
 pos pos1pre;
 pos posdeb;
-
+long posdetec;
+int cons=0;
+unsigned int temp_balise;
+long pas;//varible coréspondant a la distance a par courir elle ne comprote pas de sance
+int sense;//sense variable relative au sance de la rotation ou de la direction du go
 //com pout savoir si une nouvelle comunication est posible avec le métre
 //etat variable de la machine d'état +mise a l'état 0 voir sur la machine d'état
 //etatp variable donnant l'état précédant
+
 
 
 
@@ -45,6 +51,18 @@ digitalWrite(sleep_D, HIGH);
 motor_D.setSpeed(speed);
 motor_D.setAcceleration(acceleration);
 
+pinMode(RECALAGEAVANT, INPUT_PULLUP);//haut gauche
+pinMode(RECALAGEARRIERE, INPUT_PULLUP);//haut droit
+
+//initialisation CAPTEUR_AV et CAPTEUR_AR
+pinMode(CAPTEUR_AV,INPUT_PULLUP);
+pinMode(CAPTEUR_AR,INPUT_PULLUP);
+
+
+tour.attach(5);
+MsTimer2::set(800, MouvementTourelle);
+MsTimer2::start();
+
 
 for(i=0;i<3;i++)recepetion_tram[i]=0;//ramplit de zero le tableau de réception
 
@@ -63,12 +81,20 @@ etat=1;
 void loop() {
 //byte utiliser pour la mémoire de de la trame t[0]
 //long dist;
-long pas;//varible coréspondant a la distance a par courir elle ne comprote pas de sance
-int sense;//sense variable relative au sance de la rotation ou de la direction du go
+//varible coréspondant a la distance a par courir elle ne comprote pas de sance
+//sense variable relative au sance de la rotation ou de la direction du go
 //byte i;
 byte e,f,g;
 //mise a jour capteur
 //mise a jour etat
+if(((etatp==3)&&(digitalRead(CAPTEUR_AV)==LOW)&&(pas*sense>=0))){ //détection capteur avant
+  etat=6;
+  temp_balise=millis();
+}
+if(((etatp==3)&&(digitalRead(CAPTEUR_AR)==LOW)&&(pas*sense<=0))){ //detection capteur arrière
+  etat=6;
+  temp_balise=millis();
+}
 //mise a jour actionneur
 
 switch (etat){//permet de réaliser les différent etat de la machinne d'etat
@@ -142,13 +168,21 @@ switch (etat){//permet de réaliser les différent etat de la machinne d'etat
   break;
 
   case 3://etat 3 (go)
-    pas=(long)(coeficien_go*(float)(go));//calcule du nombre de pas pour les roue sans le signe de la direction
-    if (iso_bite(mouvement,2)==1<<2)sense=-1;//teste pour conaitre le sance de la translation
-    else sense=1;
-    motor_D.move(pas*sense);//activation de la rotation jusque cette valeur de pas moteur droite
-    motor_G.move(pas*(-sense));//activation de la rotation jusque cette valeur de pas moteur gauche
-    etat=5;//passe a l etat 5
-    etatp=3;//passe l'étatpe précédante a 3
+  if(etatp==6){
+    teste++;
+      pas=((long)(float)go*coeficien_go)+posdetec;
+    }else{
+      pas=(long)(coeficien_go*(float)(go)); //calcule du nombre de pas pour les roue sans le signe de la direction
+    }
+  motor_D.setCurrentPosition(0);
+  motor_G.setCurrentPosition(0);
+  if (iso_bite(mouvement,2)==1<<2)sense=-1; //teste pour conaitre le sance de la translation
+  else sense=1;
+  motor_D.move(pas*sense);//activation de la rotation jusque cette valeur de pas moteur droite
+  motor_G.move(pas*(-sense));//activation de la rotation jusque cette valeur de pas moteur gauche
+  etat=5;//passe a l etat 5
+  etatp=3;//passe l'étatpe précédante a 3
+
   break;
 
   case 4://etat 4 (turn)
@@ -172,11 +206,25 @@ switch (etat){//permet de réaliser les différent etat de la machinne d'etat
     turnactu=turnactu%360;
   break;
 
-  case 5://attante de fin adr_deplacement
+  case 5://attante de fin adr_deplacement$
+  motor_D.run();//lancemant du moteur droit
+ motor_G.run();//lancemant du moteur gauche
     if(motor_D.isRunning()==false && motor_G.isRunning()==false){//teste des morteur a l'arrée pour pacer au d'éplacemnt suivant
       if(etatp==2 && (iso_bite(mouvement,3)==(1<<3)))etat=3;//passe a l'état 3 si état précédant etait 2 et si le go est activer
       else if (etatp==2 && (iso_bite(mouvement,5)==(1<<5)))etat=4;//si non passe a l état 4 si etat précédan etait 2 et si turn 2 est activer
       else if (etatp==3 && (iso_bite(mouvement,5)==(1<<5)))etat=4;//si non passe a l'état 5 si etat précédan etait 3 et si turn 2 est activer
+      else if (com==0 && recepetion_tram[4]>15){
+        if(recepetion_tram[4]>=16 && recepetion_tram[4]<=19){// test pour recalage
+          recalageX(pos1);
+          etat=1;//passe a l'état 1
+          com=0;
+        }
+        else {
+          recalageY(pos1);
+          etat=1;//passe a l'état 1
+          com=0;
+        }
+      }
       else if (etatp==4){//si non passe a l'état 1 si on vient de l'etat 4
         etat=1;//passe a l'état 1
         com=0;// passe a com a 0 car fin du dépalcment
@@ -189,20 +237,33 @@ switch (etat){//permet de réaliser les différent etat de la machinne d'etat
         etat=1;//passe a l'état 1
         com=0;// passe a com a 0 car fin du dépalcment
       }
-    }
+
+  }
+  break;
+
+  case 6:// arret des moteur car détetion
+  motor_D.stop();//stop moteurs
+  motor_G.stop();//stop du moteur droit
+  posdetec=motor_G.currentPosition();
+  if ((digitalRead(CAPTEUR_AV)==LOW)||(digitalRead(CAPTEUR_AR)==LOW)){
+    temp_balise=millis();
+  }
+
+  etatp=6;
+
+  if ((digitalRead(CAPTEUR_AV)==HIGH)&&(digitalRead(CAPTEUR_AR)==HIGH)&&(millis()-temp_balise)==2100){
+    etat=3;
+  }
   break;
 }
 
-motor_D.run();//lancemant du moteur droit
-motor_G.run();//lancemant du moteur gauche
-//mise a jour afficheur
 }
 
 void receiveEvent(int howMany){//fonction d'intérupetion l'or dun envoi du maitre
 byte i;//variable pour le for
 for(i=0;i<howMany;i++)recepetion_tram[i]=Wire.read();//rampli le tableau si avec les valeur de la transmition
   com=1;
-  for(i=0;i<howMany;i++)Serial.println(recepetion_tram[i]);
+  Serial.println(recepetion_tram[4]);
 // passe la comme a 1 pour l'éxecution de la trame en cour
 }
 
@@ -224,45 +285,126 @@ pos1.y=(int)(recepetion_tram[2]+((f&=(0x0F))<<8));
 return pos1;
 }
 
-void recalagex (pos pos1){
-byte calex;
-int x;
-x=pos1.x;
-//détermine le chemin le plus court pour faire le recalage bordure
-if(3000-pos1.x<pos1.x ){
-  pos1.x=3000;
+void recalageX (pos pos1){
+if(recepetion_tram[4]==16){
+  motor_D.move((long)(coeficien_go*(float)(700)));
+  motor_G.move((long)(coeficien_go*(float)(-700)));
+  while(digitalRead(RECALAGEAVANT)==1){
+//mettre delay 3s avant run
+    motor_D.run();
+    motor_G.run();
+  }delay(3000);
+  motor_D.setCurrentPosition(0);
+  motor_G.setCurrentPosition(0);
+  pos1.x=2000;
 }
 else{
-  pos1.x=0;
+  if(recepetion_tram[4]==17){
+    motor_D.move((long)(coeficien_go*(float)(-700)));
+    motor_G.move((long)(coeficien_go*(float)(700)));
+    while(digitalRead(RECALAGEARRIERE)==1){
+//mettre delay 3s avant run
+      motor_D.run();
+      motor_G.run();
+    }delay(3000);
+      motor_D.setCurrentPosition(0);
+      motor_G.setCurrentPosition(0);
+      pos1.x=2000;
+    }
+    else{
+      if(recepetion_tram[4]==18){
+        motor_D.move((long)(coeficien_go*(float)(700)));
+        motor_G.move((long)(coeficien_go*(float)(-700)));
+        while(digitalRead(RECALAGEAVANT)==1){
+//mettre delay 3s avant run
+          motor_D.run();
+          motor_G.run();
+          }delay(3000);
+          motor_D.setCurrentPosition(0);
+          motor_G.setCurrentPosition(0);
+          pos1.x=0;
+        }
+        else{
+          if(recepetion_tram[4]==19){
+            motor_D.move((long)(coeficien_go*(float)(-700)));
+            motor_G.move((long)(coeficien_go*(float)(700)));
+            while(digitalRead(RECALAGEARRIERE)==1){
+//mettre delay 3s avant run
+              motor_D.run();
+              motor_G.run();
+              }delay(3000);
+              motor_D.setCurrentPosition(0);
+              motor_G.setCurrentPosition(0);
+              pos1.x=0;
+            }
+          }
+        }
+      }
 }
 
-//faire un go pour aller aux positions
-while(calex!=1){
-    com=1;
+void recalageY (pos pos1){
+  if(recepetion_tram[4]==20){
+    motor_D.move((long)(coeficien_go*(float)(700)));
+    motor_G.move((long)(coeficien_go*(float)(-700)));
+    while(digitalRead(RECALAGEAVANT)==1){
+//mettre delay 3s avant run
+      motor_D.run();
+      motor_G.run();
+    }delay(3000);
+    motor_D.setCurrentPosition(0);
+    motor_G.setCurrentPosition(0);
+    pos1.y=0;
+  }
+  else{
+    if(recepetion_tram[4]==21){
+      motor_D.move((long)(coeficien_go*(float)(-700)));
+      motor_G.move((long)(coeficien_go*(float)(700)));
+      while(digitalRead(RECALAGEARRIERE)==1){
+//mettre delay 3s avant run
+        motor_D.run();
+        motor_G.run();
+        }delay(3000);
+        motor_D.setCurrentPosition(0);
+        motor_G.setCurrentPosition(0);
+        pos1.y=0;
+      }
+      else{
+        if(recepetion_tram[4]==22){
+          motor_D.move((long)(coeficien_go*(float)(700)));
+          motor_G.move((long)(coeficien_go*(float)(-700)));
+          while(digitalRead(RECALAGEAVANT)==1){
+//mettre delay 3s avant run
+            motor_D.run();
+            motor_G.run();
+            }delay(3000);
+            motor_D.setCurrentPosition(0);
+            motor_G.setCurrentPosition(0);
+            pos1.y=3000;
+          }
+          else{
+            if(recepetion_tram[4]==23){
+              motor_D.move((long)(coeficien_go*(float)(-700)));
+              motor_G.move((long)(coeficien_go*(float)(700)));
+              while(digitalRead(RECALAGEARRIERE)==1){
+//mettre delay 3s avant run
+                motor_D.run();
+                motor_G.run();
+                }delay(3000);
+                motor_D.setCurrentPosition(0);
+                motor_G.setCurrentPosition(0);
+                pos1.y=3000;
+              }
+            }
+          }
+        }
 }
-//le go se termine quand les cales sont a 1
-//retour position initial
-pos1.x=x;
-}
-
-void recalagey (pos pos1){
-byte caley;
-int y;
-y=pos1.y;
-
-//détermine le chemin le plus court pour faire le recalage bordure
-if(3000-pos1.y<pos1.y){
-  pos1.y=3000;
-}
-else{
-  pos1.y=0;
-}
-
-//faire un go pour aller aux positions
-while(caley!=1){
-    com=1;
-}
-//le go se termine quand les cales sont a 1
-//retour position initial
-pos1.y=y;
+void MouvementTourelle(){
+  if(cons==0){
+      tour.write(150);//180 degrès
+      cons=150;
+      }
+    else{
+      tour.write(0);
+      cons=0;// 15 degrès
+    }
 }

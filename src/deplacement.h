@@ -7,13 +7,17 @@
 #include <MultiStepper.h> //getion simultaner de moteur pas a pas limiter
 #include <math.h>//pour les calculs
 
+#include <Servo.h>
+#include <MsTimer2.h>
+
+
+
 typedef struct{
   int x;
   int y;
 }pos;
 
 #define my_adr 10         //mon adresse bus I2C
-
 #define reset_G   13 // pin du moteur gauche
 #define sleep_G   15
 #define step_G    0
@@ -33,6 +37,12 @@ typedef struct{
 
 #define pi 3.1415926536//
 
+#define RECALAGEAVANT 22
+#define RECALAGEARRIERE 20
+
+#define CAPTEUR_AV 3 //détection capteur
+#define CAPTEUR_AR 4 //détection capteur
+
 void receiveEvent(int howMany);
 //fonction pour quand l'esclave reçoit une trame de adr_actionneur
 //met la trame dans un tableau
@@ -50,3 +60,7 @@ byte iso_bite(byte analiser, byte decalage);
 
 pos position (pos a);
 //renvoie position de x et y
+void recalageY (pos pos1);
+void recalageX (pos pos1);
+void MouvementTourelle();
+//mouvemnt servo tourelle
